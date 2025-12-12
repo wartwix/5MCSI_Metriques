@@ -1,56 +1,50 @@
 name: Industrialisation continue sur le serveur Alwaysdata
-on: push
+on: push # Se déclenche à chaque 'push' sur le dépôt
+
 jobs:
-  Connexion:
+  Deployer: # Nouveau Job unique pour le déploiement et la copie
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Connexion SSH avec le serveur
+      - name: 1. Checkout du code source
+        uses: actions/checkout@v4 # Télécharge votre code dans l'environnement d'exécution
+        
+      - name: 2. Préparation de l'environnement Python (Meilleure pratique)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x' # Remplacez par votre version Python si nécessaire
+
+      - name: 3. Copie du code et Synchronisation sur Alwaysdata (via SSH)
         uses: appleboy/ssh-action@master
         with:
+          # Configuration de la connexion SSH
           host: "ssh-${{ secrets.USERNAME }}.alwaysdata.net"
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
+          # Source et cible pour Rsync (rsync est généralement inclus dans cette action)
+          source: "./" # Copie tout le contenu du répertoire GitHub
+          target: "$HOME/www/flask" # Remplacez 'flask' si votre dossier s'appelle autrement
+          # Commandes à exécuter après la copie
           script: |
-            cd $HOME/www/
-  Copy:
-    needs: Connexion
-    runs-on: ubuntu-latest
-    steps:
-      - name: Connexion SSH avec le serveur
-        uses: appleboy/ssh-action@master
-        with:
-          host: "ssh-${{ secrets.USERNAME }}.alwaysdata.net"
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          script: |
-            last_directory=$(basename ${{ runner.workspace }})
-            cd $HOME/www/
-            git clone https://github.com/${{ github.repository }}.git
-            # Vérifier si le répertoire de destination existe
-            if [ "$(ls -A ./flask)" ]; then
-              rsync -r ./$last_directory/ ./flask
-              rm -rf ./$last_directory
-            else
-              echo "Le répertoire flask de destination sur votre serveur n'existe pas"
-              exit 1
-            fi
-  Restart:
-    needs: Copy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restart Alwaysdata site
+            echo "Déploiement terminé. Vérification des dépendances..."
+            # Ajoutez ici des commandes nécessaires après la copie, par exemple :
+            # cd $HOME/www/flask
+            # pip install -r requirements.txt
+
+      - name: 4. Redémarrage du site Alwaysdata (via API)
+        # Cette étape n'a pas besoin de 'needs: Deployer' si tout est dans un seul Job
         run: |
           response_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST --basic --user "${{ secrets.ALWAYSDATA_TOKEN }}:" https://api.alwaysdata.com/v1/site/${{ secrets.ALWAYSDATA_SITE_ID }}/restart/)
-          # Vérifier le code de réponse HTTP
+          
           if [ "$response_code" -eq 204 ]; then
-            echo "Relance de votre site réussi"
+            echo "Relance de votre site réussi (Code 204)."
           elif [ "$response_code" -eq 404 ]; then
-            echo "Vous n'avez pas renseigner correctement votre secret ALWAYSDATA_SITE_ID"
-            exit 1  # Quitter avec un code d'erreur
+            echo "Erreur 404: Secret ALWAYSDATA_SITE_ID incorrect. Veuillez le vérifier."
+            exit 1
           elif [ "$response_code" -eq 401 ]; then
-            echo "Vous n'avez pas renseigner correctement votre secret ALWAYSDATA_TOKEN"
-          exit 1  # Quitter avec un code d'erreur
+            echo "Erreur 401: Secret ALWAYSDATA_TOKEN incorrect ou droits insuffisants."
+            exit 1
           else
             echo "Échec du redémarrage avec le code de réponse : $response_code"
-            exit 1  # Quitter avec un code d'erreur
+            exit 1
           fi
