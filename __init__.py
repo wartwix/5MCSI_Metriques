@@ -13,7 +13,7 @@ app = Flask(__name__)
 def MaPremiereAPI():
     return "<h2>Ma page de contact</h2>"
 
-# Route /tawarano/
+# Route /tawarano/ (API de données filtrées)
 @app.route('/tawarano/')
 def meteo():
     # Appel de l'API OpenWeatherMap, extraction et conversion K -> °C
@@ -27,13 +27,19 @@ def meteo():
         results.append({'Jour': dt_value, 'temp': temp_day_value})
     return jsonify(results=results)
 
-# =========================================================
-# AJOUT DE LA NOUVELLE ROUTE : /rapport/ (Exercice 3 Bis)
-# =========================================================
+# Route /rapport/ (Affiche le graphique linéaire)
 @app.route("/rapport/")
 def mongraphique():
-    # Flask cherche automatiquement "graphique.html" dans le dossier 'templates'
     return render_template("graphique.html")
+
+# =========================================================
+# NOUVELLE ROUTE : /histogramme/ (Affiche le graphique à colonnes)
+# =========================================================
+@app.route("/histogramme/")
+def histogramme():
+    # Flask va chercher "histogramme.html" dans le dossier 'templates'
+    return render_template("histogramme.html")
+# =========================================================
 
 # Route / (Page d'accueil)
 @app.route('/')
