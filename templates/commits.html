@@ -20,6 +20,7 @@
           
           data.results.forEach(entry => {
             // Ajouter les données [Minute, Total]
+            // Note: entry.minute.toString() est correct pour l'axe des X (catégories)
             dataTable.addRow([entry.minute.toString(), entry.total_commits]);
           });
           
@@ -30,13 +31,14 @@
             vAxis: { title: 'Nombre de Commits' }
           };
           
-          // Utilisation d'un graphique à colonnes (ColumnChart)
           var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
           chart.draw(dataTable, options);
         }
 
-        // Récupération des données depuis notre nouvelle API /commits/
-        fetch('/commits/')
+        // ***************************************************************
+        // ** CORRECTION : Appel de la route API de données (pas la route HTML) **
+        // ***************************************************************
+        fetch('/api/v1/commits-data/') // <-- CHEMIN CORRIGÉ
           .then(response => response.json()) 
           .then(data => {
             drawChart(data); 
