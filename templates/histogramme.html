@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Histogramme des Températures</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  </head>
+  <body>
+    <div id="chart_div"></div>
+    
+    <script>
+      // 3. Initialisation de Google Charts
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(drawChartWrapper);
+
+      function drawChartWrapper() {
+        
+        // Fonction pour dessiner le graphique après réception des données
+        function drawChart(data) {
+          // Convertir les données JSON en un tableau utilisable par Google Charts
+          var dataTable = new google.visualization.DataTable();
+          dataTable.addColumn('string', 'Date'); 
+          dataTable.addColumn('number', 'Valeur'); 
+          
+          data.results.forEach(entry => {
+            // Conversion du Timestamp (secondes) en objet Date JS (millisecondes)
+            var date = new Date(entry.Jour * 1000); 
+            dataTable.addRow([date.toLocaleDateString(), entry.temp]);
+          });
+          
+          // Configurer les options du graphique
+          var options = {
+            title: 'Histogramme des températures de la ville de Tawarano',
+            legend: { position: 'none' } // Nous n'avons pas besoin de légende ici
+          };
+          
+          // ***************************************************************
+          // ** MODIFICATION CLÉ : Utilisation de ColumnChart au lieu de LineChart **
+          // ***************************************************************
+          var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+          chart.draw(dataTable, options);
+        }
+
+        // 4. Récupération des données depuis notre API Flask /tawarano/
+        fetch('/tawarano/')
+          .then(response => response.json()) 
+          .then(data => {
+            drawChart(data); 
+          })
+      }
+    </script>
+  </body>
+</html>
