@@ -20,7 +20,6 @@
           
           data.results.forEach(entry => {
             // Ajouter les données [Minute, Total]
-            // Note: entry.minute.toString() est correct pour l'axe des X (catégories)
             dataTable.addRow([entry.minute.toString(), entry.total_commits]);
           });
           
@@ -31,18 +30,34 @@
             vAxis: { title: 'Nombre de Commits' }
           };
           
+          // Utilisation d'un graphique à colonnes (ColumnChart)
           var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
           chart.draw(dataTable, options);
         }
 
-        // ***************************************************************
-        // ** CORRECTION : Appel de la route API de données (pas la route HTML) **
-        // ***************************************************************
-        fetch('/api/v1/commits-data/') // <-- CHEMIN CORRIGÉ
-          .then(response => response.json()) 
+        // *************************************************************
+        // ** CORRECTION APPORTÉE ICI : Appel de la route API de données **
+        // *************************************************************
+        fetch('/commits-data/') // <-- CHEMIN CORRIGÉ
+          .then(response => {
+            // Sécurité : vérifier si la réponse est OK (status 200)
+            if (!response.ok) {
+                console.error('Erreur réseau ou API:', response.statusText);
+                return Promise.reject('Erreur lors du fetch');
+            }
+            return response.json();
+          }) 
           .then(data => {
-            drawChart(data); 
+             // Sécurité : Vérifier si l'objet 'data' a bien la clé 'results'
+             if (data && data.results) {
+                drawChart(data); 
+             } else {
+                console.error('Format de données API invalide:', data);
+             }
           })
+          .catch(error => {
+              console.error('Erreur critique lors du traitement du graphique:', error);
+          });
       }
     </script>
   </body>
