@@ -4,19 +4,41 @@ from flask import json
 from datetime import datetime
 from urllib.request import urlopen
 import sqlite3
+# Note : Les lignes vides avec des espaces/tabulations au début sont ignorées
+# ou nettoyées.
                                                                                                                                        
 app = Flask(__name__)                                                                                                                  
                                                                                                                                        
 # =========================================================
-# AJOUT DE LA NOUVELLE ROUTE POUR /contact/
+# ROUTE 1 : /contact/ (Exercice précédent)
 # =========================================================
-
 @app.route("/contact/")
 def MaPremiereAPI():
     return "<h2>Ma page de contact</h2>"
 
 # =========================================================
+# ROUTE 2 : /tawarano/ (Extraction de l'API Météo)
+# =========================================================
+@app.route('/tawarano/')
+def meteo():
+    # URL corrigée : utilisation de '&' au lieu de '&amp;'
+    response = urlopen('https://samples.openweathermap.org/data/2.5/forecast?lat=0&lon=0&appid=xxx')
+    raw_content = response.read()
+    json_content = json.loads(raw_content.decode('utf-8'))
+    results = []
+    
+    # Le .get('list', []) permet de s'assurer que même si 'list' n'existe pas, la boucle ne plante pas
+    for list_element in json_content.get('list', []):
+        dt_value = list_element.get('dt')
+        # Extraction de la température et conversion de Kelvin à Celsius
+        temp_day_value = list_element.get('main', {}).get('temp') - 273.15 
+        results.append({'Jour': dt_value, 'temp': temp_day_value})
+        
+    return jsonify(results=results)
 
+# =========================================================
+# ROUTE EXISTANTE : /
+# =========================================================
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
