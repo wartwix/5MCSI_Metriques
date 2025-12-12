@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Metrique</title>
+    <title>Histogramme des Températures</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   </head>
   <body>
@@ -10,40 +10,41 @@
     <script>
       // 3. Initialisation de Google Charts
       google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(drawBackgroundColor);
+      google.charts.setOnLoadCallback(drawChartWrapper);
 
-      function drawBackgroundColor() {
+      function drawChartWrapper() {
         
         // Fonction pour dessiner le graphique après réception des données
         function drawChart(data) {
           // Convertir les données JSON en un tableau utilisable par Google Charts
           var dataTable = new google.visualization.DataTable();
-          dataTable.addColumn('string', 'Date'); // Colonne des dates
-          dataTable.addColumn('number', 'Valeur'); // Colonne des températures
+          dataTable.addColumn('string', 'Date'); 
+          dataTable.addColumn('number', 'Valeur'); 
           
           data.results.forEach(entry => {
             // Conversion du Timestamp (secondes) en objet Date JS (millisecondes)
             var date = new Date(entry.Jour * 1000); 
-            dataTable.addRow([date.toLocaleDateString(), entry.temp]); // Ajout des données
+            dataTable.addRow([date.toLocaleDateString(), entry.temp]);
           });
           
           // Configurer les options du graphique
           var options = {
-            title: 'Évolution des températures de la ville de Tawarano',
-            curveType: 'function',
-            legend: { position: 'bottom' }
+            title: 'Histogramme des températures de la ville de Tawarano',
+            legend: { position: 'none' } // Nous n'avons pas besoin de légende ici
           };
           
-          // Dessiner le graphique
-          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+          // ***************************************************************
+          // ** MODIFICATION CLÉ : Utilisation de ColumnChart au lieu de LineChart **
+          // ***************************************************************
+          var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
           chart.draw(dataTable, options);
         }
 
         // 4. Récupération des données depuis notre API Flask /tawarano/
         fetch('/tawarano/')
-          .then(response => response.json()) // Convertit la réponse en JSON
+          .then(response => response.json()) 
           .then(data => {
-            drawChart(data); // Passe le JSON à la fonction de dessin
+            drawChart(data); 
           })
       }
     </script>
