@@ -8,10 +8,14 @@ import sqlite3
 # Initialisation de l'application Flask
 app = Flask(__name__)
 
-# Route /contact/
+# =========================================================
+# MODIFICATION POUR L'EXERCICE 5 : Route /contact/ renvoie un TEMPLATE
+# =========================================================
 @app.route("/contact/")
 def MaPremiereAPI():
-    return "<h2>Ma page de contact</h2>"
+    # Flask va chercher le fichier contact.html dans le dossier 'templates'
+    return render_template("contact.html")
+# =========================================================
 
 # Route /tawarano/ (API de données filtrées)
 @app.route('/tawarano/')
@@ -32,14 +36,10 @@ def meteo():
 def mongraphique():
     return render_template("graphique.html")
 
-# =========================================================
-# NOUVELLE ROUTE : /histogramme/ (Affiche le graphique à colonnes)
-# =========================================================
+# Route /histogramme/ (Affiche le graphique à colonnes)
 @app.route("/histogramme/")
 def histogramme():
-    # Flask va chercher "histogramme.html" dans le dossier 'templates'
     return render_template("histogramme.html")
-# =========================================================
 
 # Route / (Page d'accueil)
 @app.route('/')
